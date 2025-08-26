@@ -26,7 +26,7 @@ def ticket_prompt():
         return 0
 
 # function for calculating the purchase, the buyer count, the tickets available
-def calculations(requested, tickets_available):
+def ticket_calculations(requested, tickets_available):
     if requested <= tickets_available:
         tickets_available -= requested
         print(f'You got {requested} ticket(s).')
@@ -36,16 +36,16 @@ def calculations(requested, tickets_available):
         return tickets_available, False
 
 # the function for looping the program until all tickets are sold
-def loopdeloop():
+def loop_de_loop():
     global tickets_available, buyer_count
     while tickets_available > 0:
         requested = ticket_prompt()
         if requested == 0:
             continue
-        tickets_available, success = calculations(requested, tickets_available)
+        tickets_available, success = ticket_calculations(requested, tickets_available)
         if success:
             buyer_count += 1
     print(f"All tickets sold! Total Buyers: {buyer_count}")
 
 # running with it!
-loopdeloop()
+loop_de_loop()

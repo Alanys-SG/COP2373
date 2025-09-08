@@ -1,3 +1,10 @@
+# Alanys Suazo-Gracia
+# Assignment 2: Debugging excercise
+
+# The purpose of this program is to calculate the discount price of an item.
+# The purpose of the assignment it to practice using the debugging tool featured in PyCharm
+
+
 def calculate_discount(price, discount_rate):
 
     #Calculate the discount amount based on the price and discount rate.
@@ -12,20 +19,23 @@ def apply_discount(price, discount_amount):
 
 def main():
 
+    # product list created and adjusted
     products = [
         {"name": "Laptop", "price": 1000, "discount_rate": 0.1},
         {"name": "Smartphone", "price": 800, "discount_rate": 0.15},
-        {"name": "Tablet", "price": "500", "discount_rate": 0.2},
+        {"name": "Tablet", "price": 500, "discount_rate": 0.2}, # Changed price from a string to a variable
         {"name": "Headphones", "price": 200, "discount_rate": 0.05}
     ]
 
     for product in products:
-        price = product["price"]
-        discount_rate = product["discount_rate"]
-        
+        price = float(product["price"]) #fixed: price is now treated as float
+        discount_rate = float(product["discount_rate"]) #fixed: discount rate is now treated as float
+
+        #calls for the calculating function
         discount_amount = calculate_discount(price, discount_rate)
         final_price = apply_discount(price, discount_amount)
 
+        # display results
         print(f"Product: {product['name']}")
         print(f"Original Price: ${price}")
         print(f"Discount Amount: ${discount_amount}")

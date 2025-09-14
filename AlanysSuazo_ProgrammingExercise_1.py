@@ -7,11 +7,11 @@
 
 # making variables for the tickets_available and buyer_count
 tickets_available = 10 #changed number of tickets available; 20->10
-buyer_count = 0
+people_scammed = 0 #changed the name of the accumulator variable
 
 # the functions for the prompt asking the user how many tickets they want to purchase
 def ticket_prompt():
-    try:
+    try:                                            #changed the input message
         requested = int(input("Ticket Sale Here! Up to 4 tickets per purchase, please enter the desired amount: "))
         if 1 <= requested <= 4:
             return requested
@@ -22,7 +22,7 @@ def ticket_prompt():
             print('Buddy, I said 4 MAX!')
             return 0
     except ValueError:
-        print('what are you even typing?')
+        print('...what are you even typing?')
         return 0
 
 # function for calculating the purchase, the buyer count, the tickets available
@@ -37,15 +37,15 @@ def ticket_calculations(requested, tickets_available):
 
 # the function for looping the program until all tickets are sold
 def loop_de_loop():
-    global tickets_available, buyer_count
+    global tickets_available, people_scammed
     while tickets_available > 0:
         requested = ticket_prompt()
         if requested == 0:
             continue
         tickets_available, success = ticket_calculations(requested, tickets_available)
         if success:
-            buyer_count += 1
-    print(f"All tickets sold! Total Buyers: {buyer_count}")
+            people_scammed += 1
+    print(f"All tickets sold! Total Buyers: {people_scammed}")
 
 # running with it!
 loop_de_loop()

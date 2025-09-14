@@ -12,7 +12,7 @@ buyer_count = 0
 # the functions for the prompt asking the user how many tickets they want to purchase
 def ticket_prompt():
     try:
-        requested = int(input("4 tickets MAX. How many would you like?"))
+        requested = int(input("Ticket Sale Here! Up to 4 tickets per purchase, please enter the desired amount: "))
         if 1 <= requested <= 4:
             return requested
         elif requested < 1:

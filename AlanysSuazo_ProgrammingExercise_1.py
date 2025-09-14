@@ -6,7 +6,7 @@
 #   an if statement, and a loop
 
 # making variables for the tickets_available and buyer_count
-tickets_available = 20
+tickets_available = 10 #changed number of tickets available; 20->10
 buyer_count = 0
 
 # the functions for the prompt asking the user how many tickets they want to purchase

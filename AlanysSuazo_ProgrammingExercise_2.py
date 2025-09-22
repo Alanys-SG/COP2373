@@ -9,23 +9,6 @@
 import time
 
 
-#was having issues with the functions not scanning the message correctly so i am making something to adjust the message
-# to strip the characters that were interfering
-def clean_message(message):
-    # Convert to lowercase
-    message = message.lower()
-
-    # Remove common punctuation manually
-    for char in ['.', ',', '!', '?', ':', ';', '"', "'", '(', ')', '[', ']', '{', '}', '-', '_', '*', '/', '\\']:
-        message = message.replace(char, '')
-
-    # Collapse multiple spaces
-    message = ' '.join(message.split())
-
-    return message
-
-
-
 #setting up the calculator
 def spam_sorter(message, keywords):
     spam_score = 0
@@ -42,6 +25,20 @@ def spam_sorter(message, keywords):
 
     return spam_score, matched
 
+#was having issues with the functions not scanning the message correctly, so I am making something to adjust the message
+# to strip the characters that were interfering
+def clean_message(message):
+    # Convert to lowercase
+    message = message.lower()
+
+    # Remove common punctuation manually
+    for char in ['.', ',', '!', '?', ':', ';', '"', "'", '(', ')', '[', ']', '{', '}', '-', '_', '*', '/', '\\']:
+        message = message.replace(char, '')
+
+    # Collapse multiple spaces
+    message = ' '.join(message.split())
+
+    return message
 
 
 def scam_score_counter(score):
@@ -110,5 +107,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

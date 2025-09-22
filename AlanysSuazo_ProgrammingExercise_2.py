@@ -74,7 +74,7 @@ def main():
         "verify your account", "unusual login", "immediate action required",
         "your account is in danger", "password expired"
     ]
-    print ("SPAM DETECTOR v1.0")
+    print ("SPAM DETECTOR v1.3")
     time.sleep(3)
 
     # making a while loop for the user so that program can be run multiple times
@@ -105,7 +105,7 @@ def main():
 
         again = input("\nWould you like to check another message? (yes/no): ").strip().lower()
         if again not in ["yes","y"]:
-            print("\nThanks for using SPAM DETECTOR v1.0. Stay safe out there!")
+            print("\nThanks for using SPAM DETECTOR v1.3. Stay safe out there!")
             break
 
 if __name__ == "__main__":

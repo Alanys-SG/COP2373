@@ -8,35 +8,40 @@
 # because I want to practice with display
 import time
 
-# makes a list of strings/substrings to search for in an email
-keywords = [
-    # these strings are related to the promotional area of the spam
-    "earn money", "make money fast", "cash bonus", "million dollars", "get paid",
-    "lowest price", "save big", "no credit check", "double your income", "investment opportunity",
-    "free trial", "limited time offer", "exclusive deal", "click here", "buy now",
-    "order today", "special promotion", "risk-free", "100% free", "no obligation",
 
-    # strings focused on the manipulative language that is commonly used spam
-    "act now", "congratulations", "you’ve been selected", "urgent response needed",
-    "this won’t last", "winner", "guarantee", "call now", "unsecured debt", "work from home",
+#was having issues with the functions not scanning the message correctly so i am making something to adjust the message
+# to strip the characters that were interfering
+def clean_message(message):
+    # Convert to lowercase
+    message = message.lower()
 
-    #and because the dangerous emails can be considered spam too, I included high-risk security and phishing terms
-    "alert", "attention", "suspicious activity", "account suspended", "security notice",
-    "verify your account", "unusual login", "immediate action required",
-    "your account is in danger", "password expired"
-]
+    # Remove common punctuation manually
+    for char in ['.', ',', '!', '?', ':', ';', '"', "'", '(', ')', '[', ']', '{', '}', '-', '_', '*', '/', '\\']:
+        message = message.replace(char, '')
+
+    # Collapse multiple spaces
+    message = ' '.join(message.split())
+
+    return message
+
+
 
 #setting up the calculator
 def spam_sorter(message, keywords):
     spam_score = 0
     matched = []
-    message = message.lower()
+
+    message = clean_message(message)  # Clean before scanning
+
     for word in keywords:
-        if word.lower() in message:
-            count = message.count(word.lower())
+        word_lower = word.lower()
+        if word_lower in message:
+            count = message.count(word_lower)
             spam_score += count
             matched.append((word, count))
+
     return spam_score, matched
+
 
 
 def scam_score_counter(score):
@@ -52,6 +57,23 @@ def scam_score_counter(score):
                "I feel like you knew this was spam and just wanted to see what I would do...""")
 
 def main():
+    # makes a list of strings/substrings to search for in an email
+    keywords = [
+        # these strings are related to the promotional area of the spam
+        "earn money", "make money fast", "cash bonus", "million dollars", "get paid",
+        "lowest price", "save big", "no credit check", "double your income", "investment opportunity",
+        "free trial", "limited time offer", "exclusive deal", "click here", "buy now",
+        "order today", "special promotion", "risk-free", "100% free", "no obligation",
+
+        # strings focused on the manipulative language that is commonly used spam
+        "act now", "congratulations", "you’ve been selected", "urgent response needed",
+        "this won’t last", "winner", "guarantee", "call now", "unsecured debt", "work from home",
+
+        # and because the dangerous emails can be considered spam too, I included high-risk security and phishing terms
+        "alert", "attention", "suspicious activity", "account suspended", "security notice",
+        "verify your account", "unusual login", "immediate action required",
+        "your account is in danger", "password expired"
+    ]
     print ("SPAM DETECTOR v1.0")
     time.sleep(3)
 
@@ -59,7 +81,7 @@ def main():
     while True:
 
         # enter message here
-        message = input("Enter your email message:\n").strip()
+        message = input("Enter your email message:\n").strip().lower()
         score, matched_keywords = spam_sorter(message, keywords)
         rating = scam_score_counter(score)
 
@@ -81,10 +103,10 @@ def main():
             time.sleep(2)
             print ('Congrats!')
 
-    again = input("\nWould you like to check another message? (yes/no): ").strip().lower()
-    if again not in ["yes","y"]:
-        print("\nThanks for using SPAM DETECTOR v1.0. Stay safe out there!")
-        break
+        again = input("\nWould you like to check another message? (yes/no): ").strip().lower()
+        if again not in ["yes","y"]:
+            print("\nThanks for using SPAM DETECTOR v1.0. Stay safe out there!")
+            break
 
 if __name__ == "__main__":
     main()

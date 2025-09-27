@@ -11,11 +11,17 @@ def get_total(expences):
 
 # used to get and return the highest expense
 def get_highest(expenses):
-    return max(expenses.values())
+    highest_value = max(expenses.values())
+    for name, amount in expenses.items():
+        if amount == highest_value:
+            return name, amount
 
 #used to get and return the lowest expense
 def get_lowest(expenses):
-    return min(expenses.values())
+    lowest_value = min(expenses.values())
+    for name, amount in expenses.items()
+        if amount == lowest_value
+            return name, amount
 
 # collects user input to create an expenses dictionary
 def main():
@@ -24,11 +30,11 @@ def main():
 
     # making a while loop to ask user to add to the dictionary
     while True:
-        name = input("Enter the name of you subscription. Once you're finished, type 'done'.")
-        if name.lower == 'done':
+        name = input("Enter the name of you subscription. Once you're finished, type 'done'. ")
+        if name.lower() == 'done':
             break
         try:
-            amount = float(input(f"Enter the cost for {name}:"))
+            amount = float(input(f"Enter the cost for {name}: "))
             expenses[name] =  amount
         except ValueError:
             print('Please input an actual number')

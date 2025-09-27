@@ -15,6 +15,8 @@ def get_highest(expenses):
     for name, amount in expenses.items():
         if amount == highest_value:
             return name, amount
+    return None
+
 
 #used to get and return the lowest expense
 def get_lowest(expenses):
@@ -22,6 +24,8 @@ def get_lowest(expenses):
     for name, amount in expenses.items():
         if amount == lowest_value:
             return name, amount
+    return None
+
 
 # collects user input to create an expenses dictionary
 def main():

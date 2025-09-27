@@ -42,5 +42,6 @@ def main():
     print(f'Highest expense: {high_name}(${high_value:.2f})')
     print(f'Lowest expense: {low_name} (${low_value:.2f})')
 
-
-
+#running program
+if __name__ == "__main__":
+    main()

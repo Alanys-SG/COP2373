@@ -30,7 +30,7 @@ def main():
         try:
             amount = float(input(f"Enter the cost for {name}:"))
             expenses[name] =  amount
-        except ValueError
+        except ValueError:
             print('Please input an actual number')
 
     #printing the results

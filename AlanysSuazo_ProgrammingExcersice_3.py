@@ -6,8 +6,8 @@
 #  what is the highest, lowest, and total expenses.
 
 # used to get and return total expenses
-def get_total(expences):
-    return sum(expences.values())
+def get_total(expenses):
+    return sum(expenses.values())
 
 # used to get and return the highest expense
 def get_highest(expenses):

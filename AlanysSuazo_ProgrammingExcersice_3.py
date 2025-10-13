@@ -5,10 +5,6 @@
 #  create a list/dictionary where eah expense is labeled, after which the program will analyse and show
 #  what is the highest, lowest, and total expenses.
 
-# used to get and return total expenses
-def get_total(expenses):
-    return sum(expenses.values())
-
 # used to get and return the highest expense
 def get_highest(expenses):
     highest_value = max(expenses.values())
@@ -44,7 +40,7 @@ def main():
             print('Please input an actual number')
 
     #printing the results
-    total = get_total(expenses)
+    total = sum(expenses.values())
     high_name, high_value = get_highest(expenses)
     low_name, low_value = get_lowest(expenses)
 

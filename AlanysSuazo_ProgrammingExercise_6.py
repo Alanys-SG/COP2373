@@ -21,16 +21,17 @@ def validate_input(value:str):
             return f"{label} '{value}' is Valid."
     return f"'{value}' does not match the requirements."
 
-# theuser interface that takes in inputs
+# the user interface that takes in inputs
 def main():
     print('Format Tester (Phone,Zip,SSN)')
     #loop for program to run
     while True:
-        user_input = input("Enter the number to validate( or 'q' to quit): ").strip()
+        user_input = input("Enter the number to validate (or 'q' to quit): ").strip()
         if user_input.lower() == 'q':
             print("Exiting program. Goodbye.")
             break
         print(validate_input(user_input))
 
+# calling
 if __name__ =="__main__":
     main()

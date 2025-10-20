@@ -61,7 +61,10 @@ def main():
         time.sleep(1.5)
         again = input("\nWould you like to continue? (y/n): ").strip().lower()
         if again != "y":
-            print("Exiting program. Goodbye!")
+            time.sleep(1)
+            print("Exiting program.")
+            time.sleep(1)
+            print("Goodbye!")
             break
 
 

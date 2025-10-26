@@ -22,7 +22,7 @@ def sentence_counter(paragraph: str) -> list[str]:
 def main():
     print("Hello and welcome to 'Is it a paragraph?'")
     time.sleep(1.5)
-    print("A paragraph usually consists of a collection of 3 to 5 sentences in the form of a block of text.\n"
+    print("A paragraph usually consists of a collection of 3 to 6 sentences in the form of a block of text.\n"
           "This program will count the number of sentences in your inputted paragraph,\n"
           "and then tell you if it is a paragraph and how many sentences you have written.\n")
     time.sleep(4)

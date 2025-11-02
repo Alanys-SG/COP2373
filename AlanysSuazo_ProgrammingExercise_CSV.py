@@ -86,7 +86,7 @@ def reader_program():
     #sending the data to the folowing program so the loop can be initiated accurately
     writer_program(loop_interval)
 
-    print('\n Here is the organised scores:\n')
+    print('\n Here are the organised scores:\n')
 
     # opend the file in read mode so that it can print without any errors
     with open("grades.csv", 'r') as file:

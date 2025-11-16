@@ -5,7 +5,7 @@
 #    create a class for a bank account that contains information like the name, account number, amount,
 #    and interest rate. This class should also be able to adjust interest rate, withdraw and deposit,
 #    show the current balance, as well as calulate interest based on number of days entered.
-#    This program should aslso be able to test all the diferent functions and methods.
+#    This program should slso be able to test all the diferent functions and methods.
 
 
 class BankAcct:

@@ -40,7 +40,7 @@ class Deck:
 
 
     def deal_poker_hand(self):
-        return [self.deal() for deck in range(5)]
+        return [self.deal() for _ in range(5)]
 
     def draw_phase(self, hand):
         print("\nYour current hand:")
@@ -62,12 +62,7 @@ class Deck:
 
 def main():
     deck = Deck(1)
-    hand = deal_poker_hand(deck)
-
-    print("Initial hand:")
-    for i, card in enumerate(hand, start=1):
-        print(f"{i}: {card}")
-
+    hand = deck.deal_poker_hand()
     hand = deck.draw_phase(hand)
 
     print("\nFinal hand after draw:")
@@ -75,5 +70,5 @@ def main():
         print(f"{i}: {card}")
 
 
-if __name__ == "-__main__":
+if __name__ == "__main__":
     main()

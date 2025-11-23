@@ -15,7 +15,7 @@ class Deck:
         self.card_list = [num + suit
                           for suit in '\u2665\u2666\u2663\u2660'
                           for num in 'A23456789TJQK'
-                          for deck in range(n_decks)]
+                          for _ in range(n_decks)]
         self.cards_in_play_list = []
         self.discards_list = []
         random.shuffle(self.card_list)

@@ -8,14 +8,15 @@
 #   program should display the data visually using matplotlib
 
 import sqlite3
-import random
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 
-DB_NAME = "population_ASG.db"  # Replace AT with your initials
+DB_NAME = "population_ASG.db"
 
-# Database creation and simulation
+
+# Database creation
+
 def create_database():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -44,13 +45,27 @@ def create_database():
     conn.commit()
     conn.close()
 
-
+# Simulation with realistic growth rates
 def simulate_population():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
 
-    # 🔑 FIX: Remove any previously simulated years (keep only 2023 baseline)
+    # Reset simulated years (keep only 2023 baseline)
     cur.execute("DELETE FROM population WHERE year > 2023")
+
+    # Approximate annual growth rates (based on Census/BEBR trends)
+    growth_rates = {
+        "Miami": 0.018,
+        "Orlando": 0.020,
+        "Tampa": 0.020,
+        "Jacksonville": 0.015,
+        "Tallahassee": 0.010,
+        "St. Petersburg": 0.012,
+        "Fort Lauderdale": 0.015,
+        "Sarasota": 0.010,
+        "Pensacola": 0.008,
+        "Gainesville": 0.010
+    }
 
     # Get cities and base populations
     cur.execute("SELECT city, population FROM population WHERE year=2023")
@@ -58,8 +73,9 @@ def simulate_population():
 
     for city, base_pop in data:
         population = base_pop
+        # default 1% if not listed
+        rate = growth_rates.get(city, 0.01)
         for year in range(2024, 2024 + 20):
-            rate = random.uniform(-0.02, 0.03)  # growth/decline rate
             population = int(population * (1 + rate))
             cur.execute("INSERT INTO population VALUES (?, ?, ?)", (city, year, population))
 
@@ -67,7 +83,7 @@ def simulate_population():
     conn.close()
 
 
-# GUI Class
+# Helper to get cities
 def _get_cities():
     conn = sqlite3.connect(DB_NAME)
     cur = conn.cursor()
@@ -77,6 +93,7 @@ def _get_cities():
     return cities
 
 
+# GUI Class
 class PopulationGUI:
     def __init__(self, master):
         self.master = master
@@ -110,11 +127,19 @@ class PopulationGUI:
         self.plot_button = tk.Button(self.control_frame, text="Show Growth", command=self.plot_city_population)
         self.plot_button.pack(side="left", padx=5)
 
+        # Button to re-simulate growth
+        self.resim_button = tk.Button(self.control_frame, text="Re-Simulate Growth", command=self.resimulate)
+        self.resim_button.pack(side="left", padx=5)
+
         # Quit button
         self.quit_button = tk.Button(self.control_frame, text="Quit", command=master.destroy)
         self.quit_button.pack(side="left", padx=5)
 
     def _load_table_data(self):
+        # Clear existing rows
+        for row in self.tree.get_children():
+            self.tree.delete(row)
+
         conn = sqlite3.connect(DB_NAME)
         cur = conn.cursor()
         cur.execute("SELECT city, population FROM population WHERE year=2023")
@@ -146,11 +171,19 @@ class PopulationGUI:
         plt.grid(True)
         plt.show()
 
+    def resimulate(self):
+        simulate_population()
+        self._load_table_data()
+        # Refresh dropdown values in case cities changed
+        self.city_dropdown['values'] = _get_cities()
 
+# -----------------------------
 # Main driver
+# -----------------------------
 def main():
     create_database()
-    simulate_population()  # always resets old simulation
+    # initial simulation
+    simulate_population()
 
     root = tk.Tk()
     PopulationGUI(root)
@@ -158,5 +191,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
 

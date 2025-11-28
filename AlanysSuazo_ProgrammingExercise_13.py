@@ -9,19 +9,25 @@
 
 import sqlite3
 import random
+import tkinter as tk
+from tkinter import ttk
 import matplotlib.pyplot as plt
 
+DB_NAME = "population_ASG.db"  # Replace AT with your initials
 
-def create_database(db_name="poulation_ASG.edb"):
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-    cursor.execute("""
-            CREATE TABLE IF NOT EXISTS population (
-                city TEXT,
-                year INTEGER,
-                population INTEGER
-            )
-        """)
+# Database creation and simulation
+def create_database():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS population (
+            city TEXT,
+            year INTEGER,
+            population INTEGER
+        )
+    """)
+
     cities = [
         "Miami", "Orlando", "Tampa", "Jacksonville", "Tallahassee",
         "St. Petersburg", "Fort Lauderdale", "Sarasota", "Pensacola", "Gainesville"
@@ -29,81 +35,128 @@ def create_database(db_name="poulation_ASG.edb"):
     populations_2023 = [470000, 310000, 390000, 950000, 200000,
                         260000, 180000, 57000, 54000, 140000]
 
-    # Only insert if not already present
+    # Insert baseline year (2023) if not already present
     for city, pop in zip(cities, populations_2023):
-        cursor.execute("SELECT * FROM population WHERE city=? AND year=2023", (city,))
-        if cursor.fetchone() is None:
-            cursor.execute("INSERT INTO population VALUES (?, ?, ?)", (city, 2023, pop))
+        cur.execute("SELECT * FROM population WHERE city=? AND year=2023", (city,))
+        if cur.fetchone() is None:
+            cur.execute("INSERT INTO population VALUES (?, ?, ?)", (city, 2023, pop))
 
     conn.commit()
     conn.close()
 
 
-# 2. Function to simulate growth/decline for 20 years
-def simulate_population(db_name="population_ASG.db"):
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
+def simulate_population():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+
+    # 🔑 FIX: Remove any previously simulated years (keep only 2023 baseline)
+    cur.execute("DELETE FROM population WHERE year > 2023")
 
     # Get cities and base populations
-    cursor.execute("SELECT city, population FROM population WHERE year=2023")
-    data = cursor.fetchall()
+    cur.execute("SELECT city, population FROM population WHERE year=2023")
+    data = cur.fetchall()
 
     for city, base_pop in data:
         population = base_pop
         for year in range(2024, 2024 + 20):
-            # Random growth/decline rate between -2% and +3%
-            rate = random.uniform(-0.02, 0.03)
+            rate = random.uniform(-0.02, 0.03)  # growth/decline rate
             population = int(population * (1 + rate))
-            cursor.execute("INSERT INTO population VALUES (?, ?, ?)", (city, year, population))
+            cur.execute("INSERT INTO population VALUES (?, ?, ?)", (city, year, population))
 
     conn.commit()
     conn.close()
 
 
-# 3. Function to plot population growth for a chosen city
-def plot_city_population(db_name="population_ASG.db"):
-    conn = sqlite3.connect(db_name)
-    cursor = conn.cursor()
-
-    # Get list of cities
-    cursor.execute("SELECT DISTINCT city FROM population")
-    cities = [row[0] for row in cursor.fetchall()]
-
-    print("\nAvailable cities:")
-    for i, city in enumerate(cities, start=1):
-        print(f"{i}. {city}")
-
-    choice = int(input("\nChoose a city by number: "))
-    chosen_city = cities[choice - 1]
-
-    # Get population data for chosen city
-    cursor.execute("SELECT year, population FROM population WHERE city=? ORDER BY year", (chosen_city,))
-    data = cursor.fetchall()
+# GUI Class
+def _get_cities():
+    conn = sqlite3.connect(DB_NAME)
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT city FROM population")
+    cities = [row[0] for row in cur.fetchall()]
     conn.close()
+    return cities
 
-    years = [row[0] for row in data]
-    populations = [row[1] for row in data]
 
-    # Plot
-    plt.figure(figsize=(10, 6))
-    plt.plot(years, populations, marker="o", linestyle="-", color="blue")
-    plt.title(f"Population Growth for {chosen_city}")
-    plt.xlabel("Year")
-    plt.ylabel("Population")
-    plt.grid(True)
-    plt.show()
+class PopulationGUI:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Florida Population Database")
+
+        # Frame for table
+        self.table_frame = tk.Frame(master)
+        self.table_frame.pack(pady=10)
+
+        # Treeview widget to display city populations (2023)
+        self.tree = ttk.Treeview(self.table_frame, columns=("City", "Population"), show="headings")
+        self.tree.heading("City", text="City")
+        self.tree.heading("Population", text="Population (2023)")
+        self.tree.pack()
+
+        # Load data into table
+        self._load_table_data()
+
+        # Frame for dropdown + buttons
+        self.control_frame = tk.Frame(master)
+        self.control_frame.pack(pady=10)
+
+        # Dropdown for city selection
+        tk.Label(self.control_frame, text="Select a city:").pack(side="left")
+        self.city_var = tk.StringVar()
+        self.city_dropdown = ttk.Combobox(self.control_frame, textvariable=self.city_var)
+        self.city_dropdown['values'] = _get_cities()
+        self.city_dropdown.pack(side="left")
+
+        # Button to plot city population
+        self.plot_button = tk.Button(self.control_frame, text="Show Growth", command=self.plot_city_population)
+        self.plot_button.pack(side="left", padx=5)
+
+        # Quit button
+        self.quit_button = tk.Button(self.control_frame, text="Quit", command=master.destroy)
+        self.quit_button.pack(side="left", padx=5)
+
+    def _load_table_data(self):
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+        cur.execute("SELECT city, population FROM population WHERE year=2023")
+        rows = cur.fetchall()
+        conn.close()
+
+        for row in rows:
+            self.tree.insert("", "end", values=row)
+
+    def plot_city_population(self):
+        chosen_city = self.city_var.get()
+        if not chosen_city:
+            return
+
+        conn = sqlite3.connect(DB_NAME)
+        cur = conn.cursor()
+        cur.execute("SELECT year, population FROM population WHERE city=? ORDER BY year", (chosen_city,))
+        data = cur.fetchall()
+        conn.close()
+
+        years = [row[0] for row in data]
+        populations = [row[1] for row in data]
+
+        plt.figure(figsize=(10, 6))
+        plt.plot(years, populations, marker="o", linestyle="-", color="blue")
+        plt.title(f"Population Growth for {chosen_city}")
+        plt.xlabel("Year")
+        plt.ylabel("Population")
+        plt.grid(True)
+        plt.show()
 
 
 # Main driver
 def main():
-    db_name = "population_ASG.db"
-    create_database(db_name)
-    simulate_population(db_name)
-    plot_city_population(db_name)
+    create_database()
+    simulate_population()  # always resets old simulation
 
+    root = tk.Tk()
+    PopulationGUI(root)
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
-
 
 

@@ -11,187 +11,179 @@ import sqlite3
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
+import numpy as np
 
 DB_NAME = "population_ASG.db"
 
 
-# Database creation
-
+# -----------------------------
+# Database creation with baseline 2023–2025 data
+# -----------------------------
 def create_database():
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
+    with sqlite3.connect(DB_NAME) as conn:
+        cur = conn.cursor()
 
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS population (
-            city TEXT,
-            year INTEGER,
-            population INTEGER
-        )
-    """)
+        # Composite primary key ensures UPSERT works
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS population (
+                city TEXT,
+                year INTEGER,
+                population INTEGER,
+                PRIMARY KEY (city, year)
+            )
+        """)
 
-    cities = [
-        "Miami", "Orlando", "Tampa", "Jacksonville", "Tallahassee",
-        "St. Petersburg", "Fort Lauderdale", "Sarasota", "Pensacola", "Gainesville"
-    ]
-    populations_2023 = [470000, 310000, 390000, 950000, 200000,
-                        260000, 180000, 57000, 54000, 140000]
+        baseline_data = {
+            "Miami": {2023: 470000, 2024: 478000, 2025: 485000},
+            "Orlando": {2023: 310000, 2024: 316000, 2025: 322000},
+            "Tampa": {2023: 390000, 2024: 398000, 2025: 406000},
+            "Jacksonville": {2023: 950000, 2024: 964000, 2025: 978000},
+            "Tallahassee": {2023: 200000, 2024: 202000, 2025: 204000},
+            "St. Petersburg": {2023: 260000, 2024: 263000, 2025: 266000},
+            "Fort Lauderdale": {2023: 180000, 2024: 183000, 2025: 186000},
+            "Sarasota": {2023: 57000, 2024: 58000, 2025: 59000},
+            "Pensacola": {2023: 54000, 2024: 54500, 2025: 55000},
+            "Gainesville": {2023: 140000, 2024: 142000, 2025: 144000}
+        }
 
-    # Insert baseline year (2023) if not already present
-    for city, pop in zip(cities, populations_2023):
-        cur.execute("SELECT * FROM population WHERE city=? AND year=2023", (city,))
-        if cur.fetchone() is None:
-            cur.execute("INSERT INTO population VALUES (?, ?, ?)", (city, 2023, pop))
+        # UPSERT baseline values
+        for city, years in baseline_data.items():
+            for year, pop in years.items():
+                cur.execute("""
+                    INSERT INTO population (city, year, population)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(city, year) DO UPDATE SET population=excluded.population
+                """, (city, year, pop))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
 
-# Simulation with realistic growth rates
+
+# -----------------------------
+# Simulation from 2023 onward using NumPy
+# -----------------------------
 def simulate_population():
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
+    with sqlite3.connect(DB_NAME) as conn:
+        cur = conn.cursor()
 
-    # Reset simulated years (keep only 2023 baseline)
-    cur.execute("DELETE FROM population WHERE year > 2023")
+        # Remove any previously simulated years beyond 2025
+        cur.execute("DELETE FROM population WHERE year > 2025")
 
-    # Approximate annual growth rates (based on Census/BEBR trends)
-    growth_rates = {
-        "Miami": 0.018,
-        "Orlando": 0.020,
-        "Tampa": 0.020,
-        "Jacksonville": 0.015,
-        "Tallahassee": 0.010,
-        "St. Petersburg": 0.012,
-        "Fort Lauderdale": 0.015,
-        "Sarasota": 0.010,
-        "Pensacola": 0.008,
-        "Gainesville": 0.010
-    }
+        # Get baseline populations
+        cur.execute("SELECT city, population FROM population WHERE year=2023")
+        data_2023 = dict(cur.fetchall())
+        cur.execute("SELECT city, population FROM population WHERE year=2025")
+        data_2025 = dict(cur.fetchall())
 
-    # Get cities and base populations
-    cur.execute("SELECT city, population FROM population WHERE year=2023")
-    data = cur.fetchall()
+        for city in data_2023:
+            pop_2023 = data_2023[city]
+            pop_2025 = data_2025.get(city, pop_2023)
 
-    for city, base_pop in data:
-        population = base_pop
-        # default 1% if not listed
-        rate = growth_rates.get(city, 0.01)
-        for year in range(2024, 2024 + 20):
-            population = int(population * (1 + rate))
-            cur.execute("INSERT INTO population VALUES (?, ?, ?)", (city, year, population))
+            # Average annual growth rate between 2023 and 2025
+            if pop_2023 > 0 and pop_2025 > 0:
+                rate = np.power(pop_2025 / pop_2023, 0.5) - 1
+            else:
+                rate = 0.01
 
-    conn.commit()
-    conn.close()
+            years = np.arange(2026, 2026 + 20, dtype=int)
+            populations = (pop_2025 * np.power(1 + rate, np.arange(1, 21))).astype(int)
+
+            for year, pop in zip(years, populations):
+                cur.execute("""
+                    INSERT INTO population (city, year, population)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT(city, year) DO UPDATE SET population=excluded.population
+                """, (city, int(year), int(pop)))
+
+        conn.commit()
 
 
+# -----------------------------
 # Helper to get cities
-def _get_cities():
-    conn = sqlite3.connect(DB_NAME)
-    cur = conn.cursor()
-    cur.execute("SELECT DISTINCT city FROM population")
-    cities = [row[0] for row in cur.fetchall()]
-    conn.close()
-    return cities
+# -----------------------------
+def get_cities():
+    with sqlite3.connect(DB_NAME) as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT DISTINCT city FROM population ORDER BY city")
+        return [row[0] for row in cur.fetchall()]
 
 
+# -----------------------------
 # GUI Class
+# -----------------------------
 class PopulationGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Florida Population Database")
 
-        # Frame for table
-        self.table_frame = tk.Frame(master)
-        self.table_frame.pack(pady=10)
-
-        # Treeview widget to display city populations (2023)
-        self.tree = ttk.Treeview(self.table_frame, columns=("City", "Population"), show="headings")
+        # Table
+        self.tree = ttk.Treeview(master, columns=("City", "Population"), show="headings")
         self.tree.heading("City", text="City")
-        self.tree.heading("Population", text="Population (2023)")
-        self.tree.pack()
+        self.tree.heading("Population", text="Population (2025)")
+        self.tree.pack(pady=10)
 
-        # Load data into table
         self._load_table_data()
 
-        # Frame for dropdown + buttons
+        # Controls
         self.control_frame = tk.Frame(master)
         self.control_frame.pack(pady=10)
 
-        # Dropdown for city selection
         tk.Label(self.control_frame, text="Select a city:").pack(side="left")
         self.city_var = tk.StringVar()
-        self.city_dropdown = ttk.Combobox(self.control_frame, textvariable=self.city_var)
-        self.city_dropdown['values'] = _get_cities()
+        self.city_dropdown = ttk.Combobox(self.control_frame, textvariable=self.city_var, state="readonly")
+        self.city_dropdown['values'] = get_cities()
         self.city_dropdown.pack(side="left")
 
-        # Button to plot city population
-        self.plot_button = tk.Button(self.control_frame, text="Show Growth", command=self.plot_city_population)
-        self.plot_button.pack(side="left", padx=5)
-
-        # Button to re-simulate growth
-        self.resim_button = tk.Button(self.control_frame, text="Re-Simulate Growth", command=self.resimulate)
-        self.resim_button.pack(side="left", padx=5)
-
-        # Quit button
-        self.quit_button = tk.Button(self.control_frame, text="Quit", command=master.destroy)
-        self.quit_button.pack(side="left", padx=5)
+        tk.Button(self.control_frame, text="Show Growth", command=self.plot_city_population).pack(side="left", padx=5)
+        tk.Button(self.control_frame, text="Re-Simulate Growth", command=self.resimulate).pack(side="left", padx=5)
+        tk.Button(self.control_frame, text="Quit", command=master.destroy).pack(side="left", padx=5)
 
     def _load_table_data(self):
-        # Clear existing rows
         for row in self.tree.get_children():
             self.tree.delete(row)
-
-        conn = sqlite3.connect(DB_NAME)
-        cur = conn.cursor()
-        cur.execute("SELECT city, population FROM population WHERE year=2023")
-        rows = cur.fetchall()
-        conn.close()
-
-        for row in rows:
-            self.tree.insert("", "end", values=row)
+        with sqlite3.connect(DB_NAME) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT city, population FROM population WHERE year=2025 ORDER BY city")
+            for city, pop in cur.fetchall():
+                self.tree.insert("", "end", values=(city, pop))
 
     def plot_city_population(self):
         chosen_city = self.city_var.get()
         if not chosen_city:
             return
+        with sqlite3.connect(DB_NAME) as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT year, population FROM population WHERE city=? ORDER BY year", (chosen_city,))
+            data = cur.fetchall()
 
-        conn = sqlite3.connect(DB_NAME)
-        cur = conn.cursor()
-        cur.execute("SELECT year, population FROM population WHERE city=? ORDER BY year", (chosen_city,))
-        data = cur.fetchall()
-        conn.close()
-
-        years = [row[0] for row in data]
-        populations = [row[1] for row in data]
+        years = np.array([int(r[0]) for r in data], dtype=int)
+        populations = np.array([int(r[1]) for r in data], dtype=int)
 
         plt.figure(figsize=(10, 6))
         plt.plot(years, populations, marker="o", linestyle="-", color="blue")
+        plt.xticks(years, rotation=45)
         plt.title(f"Population Growth for {chosen_city}")
         plt.xlabel("Year")
         plt.ylabel("Population")
-        plt.grid(True)
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
         plt.show()
 
     def resimulate(self):
         simulate_population()
         self._load_table_data()
-        # Refresh dropdown values in case cities changed
-        self.city_dropdown['values'] = _get_cities()
+        self.city_dropdown['values'] = get_cities()
+
 
 # -----------------------------
 # Main driver
 # -----------------------------
 def main():
     create_database()
-    # initial simulation
     simulate_population()
-
     root = tk.Tk()
     PopulationGUI(root)
     root.mainloop()
 
+
 if __name__ == "__main__":
     main()
-
-
-
-
